@@ -1,0 +1,130 @@
+generator client { provider = "prisma-client-js" }
+datasource db { provider = "postgresql"; url = env("DATABASE_URL") }
+
+enum Sex { MALE FEMALE }
+enum ActivityLevel { SEDENTARY LIGHT MODERATE VERY_ACTIVE EXTRA_ACTIVE }
+enum SurplusMode { LEAN STANDARD AGGRESSIVE }
+enum MealSlot { BREAKFAST LUNCH DINNER SNACK PRE_WORKOUT POST_WORKOUT }
+enum SupplementKind { CREATINE WHEY MULTIVITAMIN OMEGA3 OTHER }
+
+model User {
+  id            String        @id @default(cuid())
+  email         String        @unique
+  name          String
+  sex           Sex
+  birthDate     DateTime
+  heightCm      Float
+  weightKg      Float
+  activity      ActivityLevel
+  surplusMode   SurplusMode   @default(STANDARD)
+  createdAt     DateTime      @default(now())
+  dailyLogs     DailyLog[]
+  monthlyLogs   MonthlyLog[]
+  supplements   Supplement[]
+  customFoods   Food[]
+}
+
+/// Every nutrient value is per 100 g of the food.
+model Food {
+  id          String   @id @default(cuid())
+  name        String
+  category    String
+  kcal        Float
+  proteinG    Float
+  carbsG      Float
+  fatG        Float
+  fiberG      Float    @default(0)
+  calciumMg   Float    @default(0)
+  ironMg      Float    @default(0)
+  potassiumMg Float    @default(0)
+  tags        String[]
+  servingG    Float    @default(100)
+  servingLabel String  @default("100 g")
+  ownerId     String?
+  owner       User?    @relation(fields: [ownerId], references: [id])
+  entries     MealEntry[]
+  @@index([name])
+}
+
+model DailyLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  // targets are frozen per day so history stays accurate when the profile changes
+  targetKcal     Int
+  targetProteinG Int
+  targetCarbsG   Int
+  targetFatG     Int
+  targetWaterMl  Int
+  waterMl        Int      @default(0)
+  entries        MealEntry[]
+  supplementLogs SupplementLog[]
+  recommendations Recommendation[]
+  @@unique([userId, date])
+}
+
+model MonthlyLog {
+  id          String @id @default(cuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  month       DateTime @db.Date  // first day of month
+  avgKcal     Float
+  avgProteinG Float
+  daysLogged  Int
+  daysOnTarget Int
+  avgWeightKg Float?
+  @@unique([userId, month])
+}
+
+model MealEntry {
+  id         String   @id @default(cuid())
+  dailyLogId String
+  dailyLog   DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  foodId     String
+  food       Food     @relation(fields: [foodId], references: [id])
+  slot       MealSlot @default(SNACK)
+  grams      Float
+  eatenAt    DateTime
+  // macros snapshotted at log time = per100g * grams / 100
+  kcal Float
+  proteinG Float
+  carbsG Float
+  fatG Float
+}
+
+model Supplement {
+  id        String         @id @default(cuid())
+  userId    String?
+  user      User?          @relation(fields: [userId], references: [id])
+  kind      SupplementKind
+  name      String
+  doseG     Float          // creatine 5, whey 30 (one scoop), multivitamin 1 tablet
+  doseLabel String
+  foodId    String?        // whey links to a Food row so its macros count
+  logs      SupplementLog[]
+}
+
+model SupplementLog {
+  id           String   @id @default(cuid())
+  dailyLogId   String
+  dailyLog     DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  supplementId String
+  supplement   Supplement @relation(fields: [supplementId], references: [id])
+  takenAt      DateTime
+  doses        Float    @default(1)
+}
+
+model Recommendation {
+  id         String   @id @default(cuid())
+  dailyLogId String
+  dailyLog   DailyLog @relation(fields: [dailyLogId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  gapKcal Float
+  gapProteinG Float
+  gapCarbsG Float
+  gapFatG Float
+  items      Json     // [{ foodId, name, grams }]
+  score      Float
+  accepted   Boolean  @default(false)
+}

@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --paper: 230 236 238; --panel: 246 249 249; --surface: 255 255 255;
+    --ink: 16 32 42; --ink2: 70 88 106; --line: 198 209 214;
+    --glass: 211 224 191; --glassink: 30 56 34;
+    --protein: 58 75 239; --carbs: 238 159 38; --fat: 224 80 122; --water: 31 169 189; --over: 179 38 30;
+    --onaccent: 255 255 255; --device: 16 32 42; --devicetext: 230 236 238;
+    color-scheme: light;
+  }
+  .dark {
+    --paper: 9 16 21; --panel: 16 27 35; --surface: 23 37 47;
+    --ink: 232 238 241; --ink2: 160 177 190; --line: 40 57 68;
+    --protein: 128 140 255; --carbs: 242 174 69; --fat: 240 113 143; --water: 60 194 213; --over: 255 107 97;
+    --onaccent: 9 16 21; --device: 4 9 13; --devicetext: 230 236 238;
+    color-scheme: dark;
+  }
+  html { background: rgb(var(--paper)); }
+  body { @apply bg-paper font-body text-ink antialiased; }
+  :focus-visible { outline: 3px solid rgb(var(--protein)); outline-offset: 2px; border-radius: 6px; }
+  button { @apply cursor-pointer; }
+  input, select { @apply font-body; }
+}
+
+@layer components {
+  .panel { @apply rounded-2xl border border-line bg-panel; }
+  .btn { @apply inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition-colors; }
+  .btn-ink { @apply btn bg-ink text-paper hover:bg-ink2; }
+  .btn-ghost { @apply btn border border-line bg-transparent text-ink hover:bg-paper; }
+  .field { @apply w-full rounded-xl border border-line bg-surface px-3 py-2 text-base text-ink placeholder:text-ink2/60; }
+  .lcd { font-family: Doto, ui-monospace, monospace; font-weight: 900; font-variation-settings: "ROND" 100; letter-spacing: 0.02em; }
+}
+
+.ring { transition: stroke-dashoffset 700ms cubic-bezier(.2,.8,.2,1); }
+.tube-fill { transition: height 600ms cubic-bezier(.2,.8,.2,1); }
+@media (prefers-reduced-motion: reduce) {
+  .ring, .tube-fill { transition: none; }
+}
