@@ -144,7 +144,12 @@ export default function Dashboard({ store, profile }: { store: Store; profile: P
   return (
     <div className="mx-auto max-w-6xl px-4 pb-24 pt-5 sm:px-6">
       <header className="flex flex-wrap items-center justify-between gap-3 py-2">
-        <p className="font-display text-2xl font-extrabold tracking-tight">NutriGain</p>
+        <div>
+          <p className="font-display text-2xl font-extrabold tracking-tight">NutriGain</p>
+          <p className="text-sm text-ink2" aria-label={`Signed in as ${profile.name}`}>
+            Welcome, <span className="font-semibold text-ink">{profile.name}</span>
+          </p>
+        </div>
         <div className="flex items-center gap-1">
           <button className="rounded-full p-2 hover:bg-surface" aria-label="Previous day" onClick={() => setIso(shiftIso(iso, -1))}><ChevronLeft size={20} /></button>
           <span className="min-w-44 text-center font-semibold">{isToday ? "Today" : dateLabel}</span>
